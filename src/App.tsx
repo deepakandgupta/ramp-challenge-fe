@@ -13,6 +13,7 @@ export function App() {
   const { data: paginatedTransactions, ...paginatedTransactionsUtils } = usePaginatedTransactions()
   const { data: transactionsByEmployee, ...transactionsByEmployeeUtils } = useTransactionsByEmployee()
   const [isLoading, setIsLoading] = useState(false)
+  const [viewMoreVisible, setViewMoreVisible] = useState(false);
 
   const [transactions, setTransactions] = useState<Transaction[] | null>(null);
 
@@ -22,7 +23,14 @@ export function App() {
         ...(prevTransactions ?? []),
         ...paginatedTransactions.data,
       ]);
+
+      if(!paginatedTransactions.nextPage){
+        setViewMoreVisible(false);
+      } else {
+        setViewMoreVisible(true);
+      }
     } else {
+      setViewMoreVisible(false);
       setTransactions(transactionsByEmployee ?? null);
     }
   }, [paginatedTransactions, transactionsByEmployee]
@@ -31,7 +39,7 @@ export function App() {
   const loadAllTransactions = useCallback(async () => {
     setIsLoading(true)
     transactionsByEmployeeUtils.invalidateData()
-    
+
     await employeeUtils.fetchAll()
     setIsLoading(false)
     await paginatedTransactionsUtils.fetchAll()
@@ -87,7 +95,7 @@ export function App() {
         <div className="RampGrid">
           <Transactions transactions={transactions} />
 
-          {transactions !== null && (
+          {transactions !== null && viewMoreVisible && (
             <button
               className="RampButton"
               disabled={paginatedTransactionsUtils.loading}
